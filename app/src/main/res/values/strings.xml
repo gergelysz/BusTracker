@@ -1,0 +1,41 @@
+<resources>
+    <string name="app_name">allam4</string>
+    <string name="get_location">Get location</string>
+    <string name="title_activity_track">TrackActivity</string>
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="nav_header_title">Android Studio</string>
+    <string name="nav_header_subtitle">android.studio@android.com</string>
+    <string name="nav_header_desc">Navigation header</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="select_station">Select station</string>
+
+    <string-array name="bus_numbers">
+        <item>1</item>
+        <item>2</item>
+        <item>2b</item>
+        <item>2e</item>
+        <item>3</item>
+        <item>4</item>
+        <item>6</item>
+        <item>10</item>
+        <item>10b</item>
+        <item>12</item>
+        <item>14</item>
+        <item>16</item>
+        <item>17</item>
+        <item>18</item>
+        <item>19</item>
+        <item>20</item>
+        <item>21</item>
+        <item>23</item>
+        <item>26</item>
+        <item>27</item>
+        <item>30</item>
+        <item>30b</item>
+        <item>32</item>
+        <item>43</item>
+        <item>44</item>
+    </string-array>
+</resources>

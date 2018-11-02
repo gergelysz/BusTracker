@@ -1,0 +1,99 @@
+{
+  "project_info": {
+    "project_number": "465021323134",
+    "firebase_url": "https://allamvizsga-5ed13.firebaseio.com",
+    "project_id": "allamvizsga-5ed13",
+    "storage_bucket": "allamvizsga-5ed13.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:465021323134:android:12e994207762c722",
+        "android_client_info": {
+          "package_name": "sapadvrtisrproj.ms.sapientia.ro.allam4"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "465021323134-53c9eb8a0sljej122t70r1di00ccq1u6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "sapadvrtisrproj.ms.sapientia.ro.allam4",
+            "certificate_hash": "eb5689e1e4afb4ec998e0f98ac622437f076a316"
+          }
+        },
+        {
+          "client_id": "465021323134-ef6e8bhe7alp4a6cknpptkvl856122em.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCw2k6LqwS6hSYmvkxNV1Lo2aBgoXepTw0"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "465021323134-ef6e8bhe7alp4a6cknpptkvl856122em.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:465021323134:android:bab84e133e1b0774",
+        "android_client_info": {
+          "package_name": "sapadvrtisrproj.ms.sapientia.ro.allamvizsga3"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "465021323134-mm36op8gg8vo9entm4i1nrut1l5i41mf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "sapadvrtisrproj.ms.sapientia.ro.allamvizsga3",
+            "certificate_hash": "eb5689e1e4afb4ec998e0f98ac622437f076a316"
+          }
+        },
+        {
+          "client_id": "465021323134-ef6e8bhe7alp4a6cknpptkvl856122em.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCw2k6LqwS6hSYmvkxNV1Lo2aBgoXepTw0"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "465021323134-ef6e8bhe7alp4a6cknpptkvl856122em.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
