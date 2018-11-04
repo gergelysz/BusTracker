@@ -26,11 +26,17 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.database.ServerValue;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 import org.w3c.dom.Text;
 
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -73,7 +79,7 @@ public class MainActivity extends AppCompatActivity {
                     coordinatesFound = getLocation();
 
                     if(coordinatesFound) {
-                        Log.d(TAG, "location access is granted2");
+                        Log.d(TAG, "coordinates were found! Uploading to database...");
                         uploadCurrentUserCoordinates();
                     }
                 }
@@ -137,7 +143,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void uploadCurrentUserCoordinates() {
-        newUser = new User("0", latitude, longitude, "asd");
+        newUser = new User("0", latitude, longitude, "asd", com.google.firebase.Timestamp.now());
         mFirestore.collection("userCoordinates").add(newUser).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
             @Override
             public void onSuccess(DocumentReference documentReference) {
