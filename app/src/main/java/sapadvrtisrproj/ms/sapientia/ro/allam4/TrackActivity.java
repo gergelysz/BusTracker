@@ -30,9 +30,11 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -68,7 +70,13 @@ public class TrackActivity extends AppCompatActivity
     private User newUser;
     private String userId;
     private boolean coordinatesFound = false;
-    private ArrayList<Station> busStations = new ArrayList<Station>();
+    private ArrayList<Station> busStations = new ArrayList<>();
+    private ArrayList<User> usersList = new ArrayList<>();
+    private double currentLat;
+    private double currentLng;
+    private double closest = 2000;
+//    private Station saveStation = null;
+    private String closestStationName = "";
 
     @Override
     protected void onDestroy() {
@@ -95,6 +103,7 @@ public class TrackActivity extends AppCompatActivity
         getLocationPermission();
 
         setStations();
+        printUsersCoordinates();
 
 
         FloatingActionButton fab = findViewById(R.id.fab);
@@ -120,11 +129,34 @@ public class TrackActivity extends AppCompatActivity
             public void onLocationChanged(Location location) {
                 Log.d(TAG, "Location change: lat=" + location.getLatitude() + ", lon=" + location.getLongitude());
                 LatLng currentLocationLatLng = new LatLng(location.getLatitude(), location.getLongitude());
-                mMap.addMarker(new MarkerOptions().position(currentLocationLatLng).title("Current position"));
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocationLatLng, 14));
-                if(userId != null) {
+                currentLat = location.getLatitude();
+                currentLng = location.getLongitude();
+                mMap.addMarker(new MarkerOptions()
+                        .position(currentLocationLatLng)
+                        .title("Current position")
+                        .draggable(false));
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocationLatLng, 16));
+                if (userId != null) {
                     updateLocationInDatabase();
                 }
+                //mMap.clear();
+                printUsersCoordinates();
+
+                for (Station station : busStations) {
+                    Location locationStation = new Location("asd");
+                    locationStation.setLatitude(Double.parseDouble(station.getLatitude()));
+                    locationStation.setLongitude(Double.parseDouble(station.getLongitude()));
+
+
+                    if (closest > location.distanceTo(locationStation)) {
+                        closest = location.distanceTo(locationStation);
+                        closestStationName = station.getName();
+                    }
+                }
+
+                Toast.makeText(TrackActivity.this, "Closest station:\n" + closestStationName, Toast.LENGTH_LONG).show();
+
+
             }
 
             @Override
@@ -278,7 +310,7 @@ public class TrackActivity extends AppCompatActivity
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION);
         } else {
-            
+
             Location location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
 
             if (location != null) {
@@ -375,25 +407,37 @@ public class TrackActivity extends AppCompatActivity
 
                 if (busStations.size() != 0) {
 
-                    for(Station station: busStations) {
+                    for (Station station : busStations) {
 
                         Log.d(TAG, "creating bus stations circles");
 
                         LatLng latLng = new LatLng(Double.parseDouble(station.getLatitude()), Double.parseDouble(station.getLongitude()));
-                        // Instantiating CircleOptions to draw a circle around the marker
-                        CircleOptions circleOptions = new CircleOptions();
-                        // Specifying the center of the circle
-                        circleOptions.center(latLng);
-                        // Radius of the circle
-                        circleOptions.radius(24);
-                        // Border color of the circle
-                        circleOptions.strokeColor(Color.BLACK);
-                        // Fill color of the circle
-                        circleOptions.fillColor(getResources().getColor(R.color.white));
-                        // Border width of the circle
-                        circleOptions.strokeWidth(1);
-                        // Adding the circle to the GoogleMap
-                        mMap.addCircle(circleOptions);
+
+                        // Old method - Circles
+
+//                        // Instantiating CircleOptions to draw a circle around the marker
+//                        CircleOptions circleOptions = new CircleOptions();
+//                        // Specifying the center of the circle
+//                        circleOptions.center(latLng);
+//                        // Radius of the circle
+//                        circleOptions.radius(24);
+//                        // Border color of the circle
+//                        circleOptions.strokeColor(Color.BLACK);
+//                        // Fill color of the circle
+//                        circleOptions.fillColor(getResources().getColor(R.color.white));
+//                        // Border width of the circle
+//                        circleOptions.strokeWidth(1);
+//                        // Adding the circle to the GoogleMap
+//                        mMap.addCircle(circleOptions);
+
+                        // New method - Customized Markers
+
+                        mMap.addMarker(new MarkerOptions()
+                                .position(latLng)
+                                .title(station.getName())
+                                .icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_bus_station))
+                                .draggable(false)
+                        );
                     }
                 }
             }
@@ -417,6 +461,36 @@ public class TrackActivity extends AppCompatActivity
                 String error = e.getMessage();
                 Toast.makeText(TrackActivity.this, "Error: " + error, Toast.LENGTH_SHORT).show();
                 Log.d(TAG, "location data couldn't be uploaded");
+            }
+        });
+    }
+
+    private void printUsersCoordinates() {
+        mFirestore.collection("userCoordinates").addSnapshotListener(new EventListener<QuerySnapshot>() {
+            @Override
+            public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
+                for (DocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
+                    User user = new User(
+                            documentSnapshot.getString("bus"),
+                            documentSnapshot.getString("latitude"),
+                            documentSnapshot.getString("longitude"),
+                            documentSnapshot.getString("status"),
+                            documentSnapshot.getTimestamp("timestamp")
+                    );
+                    Log.d(TAG, "reading bus station data: " + user.getBus());
+                    usersList.add(user);
+                }
+
+                if (usersList.size() != 0) {
+
+                    for (User user : usersList) {
+
+                        Log.d(TAG, "creating users location markers");
+
+                        LatLng latLng = new LatLng(Double.parseDouble(user.getLatitude()), Double.parseDouble(user.getLongitude()));
+                        mMap.addMarker(new MarkerOptions().position(latLng));
+                    }
+                }
             }
         });
     }
