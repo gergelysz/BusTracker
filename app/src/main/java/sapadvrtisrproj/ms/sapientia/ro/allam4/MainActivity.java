@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseFirestore mFirestore;
     private User newUser;
     private boolean coordinatesFound = false;
-
+    //
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
