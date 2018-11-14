@@ -2,6 +2,7 @@ package sapadvrtisrproj.ms.sapientia.ro.allam4;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Color;
@@ -14,6 +15,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
@@ -48,6 +50,7 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
+import java.util.Objects;
 
 import javax.annotation.Nullable;
 
@@ -68,14 +71,15 @@ public class TrackActivity extends AppCompatActivity
     private Boolean mLocationPermissionGranted = false;
     private FirebaseFirestore mFirestore;
     private User newUser;
-    private String userId;
+    private String userId = null;
     private boolean coordinatesFound = false;
     private ArrayList<Station> busStations = new ArrayList<>();
     private ArrayList<User> usersList = new ArrayList<>();
     private double currentLat;
     private double currentLng;
     private double closest = 2000;
-//    private Station saveStation = null;
+    private static final CharSequence[] statusTypes = {"on bus", "waiting for bus"};
+    //    private Station saveStation = null;
     private String closestStationName = "";
 
     @Override
@@ -86,7 +90,9 @@ public class TrackActivity extends AppCompatActivity
          */
         locationManager.removeUpdates(locationListener);
         locationManager = null;
-        mFirestore.collection("userCoordinates").document(userId).delete();
+        if (userId != null) {
+            mFirestore.collection("userCoordinates").document(userId).delete();
+        }
         super.onDestroy();
     }
 
@@ -104,6 +110,8 @@ public class TrackActivity extends AppCompatActivity
 
         setStations();
         printUsersCoordinates();
+
+        checkAndSetUserStatus();
 
 
         FloatingActionButton fab = findViewById(R.id.fab);
@@ -136,9 +144,11 @@ public class TrackActivity extends AppCompatActivity
                         .title("Current position")
                         .draggable(false));
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocationLatLng, 16));
+
                 if (userId != null) {
                     updateLocationInDatabase();
                 }
+
                 //mMap.clear();
                 printUsersCoordinates();
 
@@ -180,7 +190,7 @@ public class TrackActivity extends AppCompatActivity
             return;
         }
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                0,
+                5000,
                 0,
                 locationListener);
 
@@ -289,11 +299,6 @@ public class TrackActivity extends AppCompatActivity
         } catch (Resources.NotFoundException e) {
             Log.e(TAG, "Can't find style. Error: ", e);
         }
-
-        // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
     }
 
     private void initMap() {
@@ -373,16 +378,52 @@ public class TrackActivity extends AppCompatActivity
 
     private void updateLocationInDatabase() {
 
-        newUser.setBus("0");
-        newUser.setLatitude(latitude);
-        newUser.setLongitude(longitude);
-        newUser.setStatus("asd");
-        newUser.setTimestamp(Timestamp.now());
+//        newUser.setBus("0");
+//        newUser.setLatitude(latitude);
+//        newUser.setLongitude(longitude);
+//        newUser.setStatus("asd");
+//        newUser.setTimestamp(Timestamp.now());
 
-        mFirestore.collection("userCoordinates").document(userId).set(newUser).addOnSuccessListener(new OnSuccessListener<Void>() {
+//        mFirestore.collection("userCoordinates").document(userId).set(newUser).addOnSuccessListener(new OnSuccessListener<Void>() {
+//            @Override
+//            public void onSuccess(Void aVoid) {
+//                Toast.makeText(TrackActivity.this, "Location data updated", Toast.LENGTH_SHORT).show();
+//            }
+//        });
+
+        mFirestore.collection("userCoordinates").document(userId).update("latitude", latitude).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(Void aVoid) {
-                Toast.makeText(TrackActivity.this, "Location data updated", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(TrackActivity.this, "User status successfully updated!", Toast.LENGTH_SHORT).show();
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                //Toast.makeText(TrackActivity.this, "User status couldn't be updated!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        mFirestore.collection("userCoordinates").document(userId).update("longitude", longitude).addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                //Toast.makeText(TrackActivity.this, "User status successfully updated!", Toast.LENGTH_SHORT).show();
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                //Toast.makeText(TrackActivity.this, "User status couldn't be updated!", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        mFirestore.collection("userCoordinates").document(userId).update("timestamp", Timestamp.now()).addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                //Toast.makeText(TrackActivity.this, "User status successfully updated!", Toast.LENGTH_SHORT).show();
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                //Toast.makeText(TrackActivity.this, "User status couldn't be updated!", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -413,25 +454,6 @@ public class TrackActivity extends AppCompatActivity
 
                         LatLng latLng = new LatLng(Double.parseDouble(station.getLatitude()), Double.parseDouble(station.getLongitude()));
 
-                        // Old method - Circles
-
-//                        // Instantiating CircleOptions to draw a circle around the marker
-//                        CircleOptions circleOptions = new CircleOptions();
-//                        // Specifying the center of the circle
-//                        circleOptions.center(latLng);
-//                        // Radius of the circle
-//                        circleOptions.radius(24);
-//                        // Border color of the circle
-//                        circleOptions.strokeColor(Color.BLACK);
-//                        // Fill color of the circle
-//                        circleOptions.fillColor(getResources().getColor(R.color.white));
-//                        // Border width of the circle
-//                        circleOptions.strokeWidth(1);
-//                        // Adding the circle to the GoogleMap
-//                        mMap.addCircle(circleOptions);
-
-                        // New method - Customized Markers
-
                         mMap.addMarker(new MarkerOptions()
                                 .position(latLng)
                                 .title(station.getName())
@@ -445,7 +467,7 @@ public class TrackActivity extends AppCompatActivity
     }
 
     private void uploadCurrentUserCoordinates() {
-        newUser = new User("0", latitude, longitude, "asd", com.google.firebase.Timestamp.now());
+        newUser = new User("0", latitude, longitude, null, com.google.firebase.Timestamp.now());
         mFirestore.collection("userCoordinates").add(newUser).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
             @Override
             public void onSuccess(DocumentReference documentReference) {
@@ -485,13 +507,65 @@ public class TrackActivity extends AppCompatActivity
 
                     for (User user : usersList) {
 
-                        Log.d(TAG, "creating users location markers");
+                        /**
+                         *   Check if the user's status is 'onbus'.
+                         *   If that's true, then display.
+                         */
+                        Log.d(TAG, "Current user status: " + user.getStatus());
 
-                        LatLng latLng = new LatLng(Double.parseDouble(user.getLatitude()), Double.parseDouble(user.getLongitude()));
-                        mMap.addMarker(new MarkerOptions().position(latLng));
+                        if (Objects.equals(user.getStatus(), "on bus")) {
+                            Log.d(TAG, "creating users location markers");
+
+                            LatLng latLng = new LatLng(Double.parseDouble(user.getLatitude()), Double.parseDouble(user.getLongitude()));
+                            mMap.addMarker(new MarkerOptions().position(latLng).icon(BitmapDescriptorFactory.fromResource(R.drawable.bus)));
+                        }
+                        //LatLng latLng = new LatLng(Double.parseDouble(user.getLatitude()), Double.parseDouble(user.getLongitude()));
+                        //mMap.addMarker(new MarkerOptions().position(latLng).icon(BitmapDescriptorFactory.fromResource(R.drawable.bus)));
                     }
                 }
             }
         });
+    }
+
+    private void checkAndSetUserStatus() {
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Please set your status")
+                .setItems(statusTypes, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        switch (which) {
+                            case 0:
+                                Toast.makeText(TrackActivity.this, "on bus", Toast.LENGTH_LONG).show();
+                                mFirestore.collection("userCoordinates").document(userId).update("status", "on bus").addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void aVoid) {
+                                        Toast.makeText(TrackActivity.this, "User status successfully updated!", Toast.LENGTH_SHORT).show();
+                                    }
+                                }).addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Toast.makeText(TrackActivity.this, "User status couldn't be updated!", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                                break;
+                            case 1:
+                                Toast.makeText(TrackActivity.this, "waiting for bus", Toast.LENGTH_LONG).show();
+                                mFirestore.collection("userCoordinates").document(userId).update("status", "waiting for bus").addOnSuccessListener(new OnSuccessListener<Void>() {
+                                    @Override
+                                    public void onSuccess(Void aVoid) {
+                                        Toast.makeText(TrackActivity.this, "User status successfully updated!", Toast.LENGTH_SHORT).show();
+                                    }
+                                }).addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        Toast.makeText(TrackActivity.this, "User status couldn't be updated!", Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                                break;
+                        }
+                    }
+                });
+        builder.create().show();
     }
 }
