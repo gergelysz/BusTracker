@@ -50,6 +50,7 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 import javax.annotation.Nullable;
@@ -81,6 +82,7 @@ public class TrackActivity extends AppCompatActivity
     private static final CharSequence[] statusTypes = {"on bus", "waiting for bus"};
     //    private Station saveStation = null;
     private String closestStationName = "";
+    private List<Marker> alUsersMarker = new ArrayList<>();
 
     @Override
     protected void onDestroy() {
@@ -302,6 +304,11 @@ public class TrackActivity extends AppCompatActivity
     }
 
     private void initMap() {
+
+        /**
+         *   Initializes map fragment
+         */
+
         Log.d(TAG, "initMap: initializing map");
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -309,6 +316,13 @@ public class TrackActivity extends AppCompatActivity
     }
 
     private boolean getLocation() {
+
+        /**
+         *   If the location listener get's the last
+         *   location, it stores the latitude and longitude
+         *   else it notifies the user with a Toast message
+         */
+
         if (ActivityCompat.checkSelfPermission(TrackActivity.this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(TrackActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION)
@@ -336,6 +350,13 @@ public class TrackActivity extends AppCompatActivity
     }
 
     private void getLocationPermission() {
+
+        /**
+         *   Checks if location permission is granted,
+         *   if it is, it initializes the map, if not,
+         *   it asks for permission
+         */
+
         Log.d(TAG, "getLocationPermission: getting location permissions");
         String[] permissions = {Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION};
@@ -378,6 +399,8 @@ public class TrackActivity extends AppCompatActivity
 
     private void updateLocationInDatabase() {
 
+        // Old method
+
 //        newUser.setBus("0");
 //        newUser.setLatitude(latitude);
 //        newUser.setLongitude(longitude);
@@ -390,6 +413,11 @@ public class TrackActivity extends AppCompatActivity
 //                Toast.makeText(TrackActivity.this, "Location data updated", Toast.LENGTH_SHORT).show();
 //            }
 //        });
+
+        /**
+         *   Updating user's location
+         *   in database
+         */
 
         mFirestore.collection("userCoordinates").document(userId).update("latitude", latitude).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
@@ -431,6 +459,11 @@ public class TrackActivity extends AppCompatActivity
 
     private void setStations() {
 
+        /**
+         *   Setting stations from database
+         *   and drawing them with markers on map
+         */
+
         Log.d(TAG, "setStations function called");
 
         mFirestore.collection("stationsCoordinates").addSnapshotListener(new EventListener<QuerySnapshot>() {
@@ -467,6 +500,12 @@ public class TrackActivity extends AppCompatActivity
     }
 
     private void uploadCurrentUserCoordinates() {
+
+        /**
+         *   Creates user and uploads
+         *   first data
+         */
+
         newUser = new User("0", latitude, longitude, null, com.google.firebase.Timestamp.now());
         mFirestore.collection("userCoordinates").add(newUser).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
             @Override
@@ -488,6 +527,13 @@ public class TrackActivity extends AppCompatActivity
     }
 
     private void printUsersCoordinates() {
+
+        /**
+         *   Getting data from database
+         *   and drawing user on map with marker
+         *   if he/she is on a bus
+         */
+
         mFirestore.collection("userCoordinates").addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
             public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
@@ -508,7 +554,7 @@ public class TrackActivity extends AppCompatActivity
                     for (User user : usersList) {
 
                         /**
-                         *   Check if the user's status is 'onbus'.
+                         *   Check if the user's status is 'on bus'.
                          *   If that's true, then display.
                          */
                         Log.d(TAG, "Current user status: " + user.getStatus());
@@ -518,9 +564,9 @@ public class TrackActivity extends AppCompatActivity
 
                             LatLng latLng = new LatLng(Double.parseDouble(user.getLatitude()), Double.parseDouble(user.getLongitude()));
                             mMap.addMarker(new MarkerOptions().position(latLng).icon(BitmapDescriptorFactory.fromResource(R.drawable.bus)));
+
+                            // TODO : add marker to users arraylist of markers
                         }
-                        //LatLng latLng = new LatLng(Double.parseDouble(user.getLatitude()), Double.parseDouble(user.getLongitude()));
-                        //mMap.addMarker(new MarkerOptions().position(latLng).icon(BitmapDescriptorFactory.fromResource(R.drawable.bus)));
                     }
                 }
             }
@@ -528,6 +574,11 @@ public class TrackActivity extends AppCompatActivity
     }
 
     private void checkAndSetUserStatus() {
+
+        /**
+         *   Dialog to set user's 'status'
+         *   'on bus' or 'waiting for bus'
+         */
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Please set your status")
