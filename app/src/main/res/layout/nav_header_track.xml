@@ -21,6 +21,7 @@
         android:src="@drawable/ic_bus" />
 
     <TextView
+        android:id="@+id/status_nav_header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="@dimen/nav_header_vertical_spacing"

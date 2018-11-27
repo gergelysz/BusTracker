@@ -1,7 +1,6 @@
 package sapadvrtisrproj.ms.sapientia.ro.allam4.Data;
 
 import com.google.firebase.Timestamp;
-import com.google.firebase.firestore.GeoPoint;
 
 public class User {
     private String bus;
@@ -60,6 +59,7 @@ public class User {
     public void setTimestamp(Timestamp timestamp) {
         this.timestamp = timestamp;
     }
+
 
     //    public User(String bus, String latitude, String longitude, String status) {
 //        this.bus = bus;
