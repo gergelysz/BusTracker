@@ -75,20 +75,18 @@ public class TrackActivity extends AppCompatActivity
     private boolean coordinatesFound = false;
     private ArrayList<Station> busStations = new ArrayList<>();
     private ArrayList<User> usersList = new ArrayList<>();
-    private double currentLat;
-    private double currentLng;
     private double closest = 2000;
     private static final CharSequence[] statusTypes = {"on bus", "waiting for bus"};
     //    private Station saveStation = null;
     private String closestStationName = "";
     private List<Marker> allUsersMarker = new ArrayList<>();
-    private Map<String, Marker> usersMarkers = new HashMap<>();
 
     private String userBus = "0", userStatus = "waiting for bus";
 
     private Marker currentUserMarker = null;
 
     private TextView statusHeaderNavBar;
+    private TextView closestStationHeaderNavBar;
 
     @Override
     protected void onDestroy() {
@@ -112,6 +110,7 @@ public class TrackActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
 
         statusHeaderNavBar = findViewById(R.id.status_nav_header);
+        closestStationHeaderNavBar = findViewById(R.id.closest_station_nav_header);
 
         mFirestore = FirebaseFirestore.getInstance();
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
@@ -127,8 +126,6 @@ public class TrackActivity extends AppCompatActivity
         setStations();
         getUsersData();
         checkAndSetUserStatus();
-
-
 
 
         FloatingActionButton fab = findViewById(R.id.fab);
@@ -180,7 +177,8 @@ public class TrackActivity extends AppCompatActivity
                     }
                 }
 
-                Toast.makeText(TrackActivity.this, "Closest station:\n" + closestStationName, Toast.LENGTH_LONG).show();
+//                Toast.makeText(TrackActivity.this, "Closest station:\n" + closestStationName, Toast.LENGTH_LONG).show();
+                closestStationHeaderNavBar.setText(R.id.closest_station_nav_header + closestStationName);
 
 
             }
@@ -263,12 +261,8 @@ public class TrackActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_select_station) {
-            // Handle the camera action
-//            usersMarkers.clear();
-            for (String iii : usersMarkers.keySet()) {
-                usersMarkers.get(iii).remove();
-            }
-        } else if (id == R.id.nav_gallery) {
+
+        } else if (id == R.id.nav_offline_bus_data) {
 
         } else if (id == R.id.nav_slideshow) {
 
@@ -559,7 +553,7 @@ public class TrackActivity extends AppCompatActivity
                             case 0:
                                 Toast.makeText(TrackActivity.this, "on bus", Toast.LENGTH_LONG).show();
                                 userBus = "on bus";
-                                statusHeaderNavBar.setText("Current status: " + userBus);
+                                statusHeaderNavBar.setText(R.id.status_nav_header + userBus);
                                 mFirestore.collection("userCoordinates").document(userId).update("status", "on bus").addOnSuccessListener(new OnSuccessListener<Void>() {
                                     @Override
                                     public void onSuccess(Void aVoid) {
@@ -575,7 +569,7 @@ public class TrackActivity extends AppCompatActivity
                             case 1:
                                 Toast.makeText(TrackActivity.this, "waiting for bus", Toast.LENGTH_LONG).show();
                                 userBus = "waiting for bus";
-                                statusHeaderNavBar.setText("Current status: " + userBus);
+                                statusHeaderNavBar.setText(R.id.status_nav_header + userBus);
                                 mFirestore.collection("userCoordinates").document(userId).update("status", "waiting for bus").addOnSuccessListener(new OnSuccessListener<Void>() {
                                     @Override
                                     public void onSuccess(Void aVoid) {

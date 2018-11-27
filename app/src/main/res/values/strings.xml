@@ -12,6 +12,8 @@
     <string name="select_station">Select station</string>
     <string name="user_status_update_success">User status successfully updated!</string>
     <string name="user_status_update_failure">User status couldn\'t be updated!</string>
+    <string name="current_status">Current status:</string>
+    <string name="closest_station">Closest station:</string>
 
     <string-array name="bus_numbers">
         <item>1</item>
