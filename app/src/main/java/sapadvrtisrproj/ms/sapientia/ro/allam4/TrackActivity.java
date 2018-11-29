@@ -25,6 +25,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.HeaderViewListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -61,17 +62,26 @@ public class TrackActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, OnMapReadyCallback {
 
     private GoogleMap mMap;
+
     private LocationManager locationManager;
     private LocationListener locationListener;
+
     private static final int REQUEST_LOCATION = 1234;
+
     private static final String TAG = "TrackActivity";
+
     private static final String FINE_LOCATION = Manifest.permission.ACCESS_FINE_LOCATION;
     private static final String COARSE_LOCATION = Manifest.permission.ACCESS_COARSE_LOCATION;
+
     private String latitude, longitude;
+
     private Boolean mLocationPermissionGranted = false;
+
     private FirebaseFirestore mFirestore;
+
     private User newUser;
     private String userId = null;
+
     private boolean coordinatesFound = false;
     private ArrayList<Station> busStations = new ArrayList<>();
     private ArrayList<User> usersList = new ArrayList<>();
@@ -81,12 +91,14 @@ public class TrackActivity extends AppCompatActivity
     private String closestStationName = "";
     private List<Marker> allUsersMarker = new ArrayList<>();
 
-    private String userBus = "0", userStatus = "waiting for bus";
+    private String userBus = "0";
+    private String userStatus = "waiting for bus";
 
     private Marker currentUserMarker = null;
 
     private TextView statusHeaderNavBar;
     private TextView closestStationHeaderNavBar;
+    private TextView userIdHeaderNavBar;
 
     @Override
     protected void onDestroy() {
@@ -109,8 +121,6 @@ public class TrackActivity extends AppCompatActivity
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        statusHeaderNavBar = findViewById(R.id.status_nav_header);
-        closestStationHeaderNavBar = findViewById(R.id.closest_station_nav_header);
 
         mFirestore = FirebaseFirestore.getInstance();
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
@@ -144,6 +154,19 @@ public class TrackActivity extends AppCompatActivity
         toggle.syncState();
 
         NavigationView navigationView = findViewById(R.id.nav_view);
+
+        /**
+         *   headerView to get the TextViews from
+         *   the navigation bar to use setText()
+         *   at showing current status and closest station.
+         */
+
+        View headerView = navigationView.getHeaderView(0);
+
+        statusHeaderNavBar = headerView.findViewById(R.id.status_nav_header);
+        closestStationHeaderNavBar = headerView.findViewById(R.id.closest_station_nav_header);
+        userIdHeaderNavBar = headerView.findViewById(R.id.user_id_nav_header);
+
         navigationView.setNavigationItemSelectedListener(this);
 
         locationListener = new LocationListener() {
@@ -165,8 +188,15 @@ public class TrackActivity extends AppCompatActivity
 
                 getUsersData();
 
+                /**
+                 *   Get all bus data and calculate
+                 *   the closest distance to current location.
+                 */
+
                 for (Station station : busStations) {
-                    Location locationStation = new Location("asd");
+
+                    Location locationStation = new Location("calcClosest");
+
                     locationStation.setLatitude(Double.parseDouble(station.getLatitude()));
                     locationStation.setLongitude(Double.parseDouble(station.getLongitude()));
 
@@ -178,7 +208,7 @@ public class TrackActivity extends AppCompatActivity
                 }
 
 //                Toast.makeText(TrackActivity.this, "Closest station:\n" + closestStationName, Toast.LENGTH_LONG).show();
-                closestStationHeaderNavBar.setText(R.id.closest_station_nav_header + closestStationName);
+                closestStationHeaderNavBar.setText(getResources().getString(R.string.closest_station) + " " + closestStationName);
 
 
             }
@@ -217,6 +247,7 @@ public class TrackActivity extends AppCompatActivity
         coordinatesFound = getLocation();
         if (coordinatesFound) {
             uploadCurrentUserData();
+            userIdHeaderNavBar.setText(getResources().getString(R.string.user_id) + " " + userId);
         }
 
 
@@ -502,6 +533,7 @@ public class TrackActivity extends AppCompatActivity
     }
 
     private void getUsersData() {
+
         /**
          *   Getting data from database
          *   and drawing user on map with marker
@@ -526,8 +558,13 @@ public class TrackActivity extends AppCompatActivity
                             documentSnapshot.getString("status"),
                             documentSnapshot.getTimestamp("timestamp")
                     );
+
                     Log.d(TAG, "Reading user's data: " + documentSnapshot.getId() + " " + user.getStatus() + " " + user.getBus());
                     usersList.add(user);
+
+                    /**
+                     *   Adding user's location to a Marker ArrayList
+                     */
 
                     LatLng latLng = new LatLng(Double.parseDouble(user.getLatitude()), Double.parseDouble(user.getLongitude()));
                     Marker m = mMap.addMarker(new MarkerOptions().title(documentSnapshot.getId()).position(latLng).icon(BitmapDescriptorFactory.fromResource(R.drawable.bus)));
@@ -553,7 +590,7 @@ public class TrackActivity extends AppCompatActivity
                             case 0:
                                 Toast.makeText(TrackActivity.this, "on bus", Toast.LENGTH_LONG).show();
                                 userBus = "on bus";
-                                statusHeaderNavBar.setText(R.id.status_nav_header + userBus);
+                                statusHeaderNavBar.setText(getResources().getString(R.string.current_status) + userBus);
                                 mFirestore.collection("userCoordinates").document(userId).update("status", "on bus").addOnSuccessListener(new OnSuccessListener<Void>() {
                                     @Override
                                     public void onSuccess(Void aVoid) {
@@ -569,7 +606,7 @@ public class TrackActivity extends AppCompatActivity
                             case 1:
                                 Toast.makeText(TrackActivity.this, "waiting for bus", Toast.LENGTH_LONG).show();
                                 userBus = "waiting for bus";
-                                statusHeaderNavBar.setText(R.id.status_nav_header + userBus);
+                                statusHeaderNavBar.setText(getResources().getString(R.string.current_status) + userBus);
                                 mFirestore.collection("userCoordinates").document(userId).update("status", "waiting for bus").addOnSuccessListener(new OnSuccessListener<Void>() {
                                     @Override
                                     public void onSuccess(Void aVoid) {
