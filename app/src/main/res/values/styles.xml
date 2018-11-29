@@ -8,7 +8,7 @@
         <!--<item name="colorAccent">@color/colorAccent</item>-->
         <item name="colorPrimary">@color/lighterdarkgray</item>
         <item name="colorPrimaryDark">@color/darkerdarkgray</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="colorAccent">@color/gray</item>
     </style>
 
     <style name="AppTheme.NoActionBar">

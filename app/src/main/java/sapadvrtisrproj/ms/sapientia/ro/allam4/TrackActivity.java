@@ -83,13 +83,17 @@ public class TrackActivity extends AppCompatActivity
     private String userId = null;
 
     private boolean coordinatesFound = false;
+
     private ArrayList<Station> busStations = new ArrayList<>();
     private ArrayList<User> usersList = new ArrayList<>();
+    private List<Marker> allUsersMarker = new ArrayList<>();
+
     private double closest = 2000;
     private static final CharSequence[] statusTypes = {"on bus", "waiting for bus"};
+
     //    private Station saveStation = null;
     private String closestStationName = "";
-    private List<Marker> allUsersMarker = new ArrayList<>();
+
 
     private String userBus = "0";
     private String userStatus = "waiting for bus";
