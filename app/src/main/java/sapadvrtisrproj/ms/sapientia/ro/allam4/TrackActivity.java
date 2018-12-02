@@ -2,9 +2,12 @@ package sapadvrtisrproj.ms.sapientia.ro.allam4;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -25,7 +28,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.HeaderViewListAdapter;
+import android.widget.RadioButton;
+import android.widget.RadioGroup;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -103,6 +111,9 @@ public class TrackActivity extends AppCompatActivity
     private TextView statusHeaderNavBar;
     private TextView closestStationHeaderNavBar;
     private TextView userIdHeaderNavBar;
+    private TextView userSpeedHeaderNavBar;
+
+    private float userSpeed = 0;
 
     @Override
     protected void onDestroy() {
@@ -146,8 +157,9 @@ public class TrackActivity extends AppCompatActivity
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                statusAndBusSelectorLoader();
+//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+//                        .setAction("Action", null).show();
             }
         });
 
@@ -170,8 +182,11 @@ public class TrackActivity extends AppCompatActivity
         statusHeaderNavBar = headerView.findViewById(R.id.status_nav_header);
         closestStationHeaderNavBar = headerView.findViewById(R.id.closest_station_nav_header);
         userIdHeaderNavBar = headerView.findViewById(R.id.user_id_nav_header);
+        userSpeedHeaderNavBar = headerView.findViewById(R.id.user_speed_nav_header);
 
         navigationView.setNavigationItemSelectedListener(this);
+
+        getLocation();
 
         locationListener = new LocationListener() {
             @Override
@@ -191,6 +206,13 @@ public class TrackActivity extends AppCompatActivity
                 }
 
                 getUsersData();
+
+                /**
+                 *   Retrieve speed data
+                 */
+
+                userSpeed = location.getSpeed();
+
 
                 /**
                  *   Get all bus data and calculate
@@ -213,6 +235,7 @@ public class TrackActivity extends AppCompatActivity
 
 //                Toast.makeText(TrackActivity.this, "Closest station:\n" + closestStationName, Toast.LENGTH_LONG).show();
                 closestStationHeaderNavBar.setText(getResources().getString(R.string.closest_station) + " " + closestStationName);
+                userSpeedHeaderNavBar.setText(getResources().getString(R.string.current_speed) + " " + userSpeed);
 
 
             }
@@ -251,7 +274,6 @@ public class TrackActivity extends AppCompatActivity
         coordinatesFound = getLocation();
         if (coordinatesFound) {
             uploadCurrentUserData();
-            userIdHeaderNavBar.setText(getResources().getString(R.string.user_id) + " " + userId);
         }
 
 
@@ -299,7 +321,9 @@ public class TrackActivity extends AppCompatActivity
 
         } else if (id == R.id.nav_offline_bus_data) {
 
-        } else if (id == R.id.nav_slideshow) {
+        } else if (id == R.id.nav_change_statusAndBus) {
+
+            statusAndBusSelectorLoader();
 
         } else if (id == R.id.nav_manage) {
 
@@ -398,7 +422,7 @@ public class TrackActivity extends AppCompatActivity
         return false;
     }
 
-    private void getLocationPermission() {
+    private void getLocationPermission() { // NOT RUNNING
 
         /**
          *   Checks if location permission is granted,
@@ -523,6 +547,7 @@ public class TrackActivity extends AppCompatActivity
                 Toast.makeText(TrackActivity.this, "User data uploaded to the database.", Toast.LENGTH_SHORT).show();
                 Log.d(TAG, "location data uploaded");
                 userId = documentReference.getId();
+                userIdHeaderNavBar.setText(getResources().getString(R.string.user_id) + " " + userId);
 //                Toast.makeText(TrackActivity.this, "Current user's id: " + userId, Toast.LENGTH_SHORT).show();
 
             }
@@ -593,8 +618,8 @@ public class TrackActivity extends AppCompatActivity
                         switch (which) {
                             case 0:
                                 Toast.makeText(TrackActivity.this, "on bus", Toast.LENGTH_LONG).show();
-                                userBus = "on bus";
-                                statusHeaderNavBar.setText(getResources().getString(R.string.current_status) + userBus);
+                                userStatus = "on bus";
+                                statusHeaderNavBar.setText(getResources().getString(R.string.current_status) + " " + userStatus);
                                 mFirestore.collection("userCoordinates").document(userId).update("status", "on bus").addOnSuccessListener(new OnSuccessListener<Void>() {
                                     @Override
                                     public void onSuccess(Void aVoid) {
@@ -609,8 +634,8 @@ public class TrackActivity extends AppCompatActivity
                                 break;
                             case 1:
                                 Toast.makeText(TrackActivity.this, "waiting for bus", Toast.LENGTH_LONG).show();
-                                userBus = "waiting for bus";
-                                statusHeaderNavBar.setText(getResources().getString(R.string.current_status) + userBus);
+                                userStatus = "waiting for bus";
+                                statusHeaderNavBar.setText(getResources().getString(R.string.current_status) + " " + userStatus);
                                 mFirestore.collection("userCoordinates").document(userId).update("status", "waiting for bus").addOnSuccessListener(new OnSuccessListener<Void>() {
                                     @Override
                                     public void onSuccess(Void aVoid) {
@@ -627,5 +652,78 @@ public class TrackActivity extends AppCompatActivity
                     }
                 });
         builder.create().show();
+    }
+
+    /**
+     *   Dialog to change the current user's
+     *   status and bus, if he/she is on bus
+     */
+
+    private void statusAndBusSelectorLoader() {
+
+        final Dialog dialog = new Dialog(TrackActivity.this);
+        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.argb(100, 0, 0, 0)));
+        dialog.setContentView(R.layout.status_and_bus_set);
+        dialog.setCancelable(true);
+
+        final RadioButton onBus, waitingForBus;
+        onBus = dialog.findViewById(R.id.radioButton);
+        waitingForBus = dialog.findViewById(R.id.radioButton2);
+
+        final TextView textView = dialog.findViewById(R.id.editText_sab_selectBus);
+
+        final Spinner spinner = dialog.findViewById(R.id.spinner_statAndBus);
+
+        textView.setVisibility(View.INVISIBLE);
+        spinner.setVisibility(View.INVISIBLE);
+
+        Button applyButton = dialog.findViewById(R.id.button_apply_status_and_bus);
+
+        onBus.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                spinner.setVisibility(View.VISIBLE);
+                textView.setVisibility(View.VISIBLE);
+            }
+        });
+
+        waitingForBus.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                spinner.setVisibility(View.INVISIBLE);
+                textView.setVisibility(View.INVISIBLE);
+            }
+        });
+
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(TrackActivity.this,
+                android.R.layout.simple_list_item_1, getResources().getStringArray(R.array.bus_numbers));
+        spinnerAdapter.setDropDownViewResource(R.layout.support_simple_spinner_dropdown_item);
+        spinner.setAdapter(spinnerAdapter);
+
+        applyButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (onBus.isChecked()) {
+                    if (spinner != null) {
+                        userStatus = "on bus";
+                        userBus = spinner.getSelectedItem().toString();
+                        dialog.cancel();
+                    }
+                } else if (waitingForBus.isChecked()) {
+                    userStatus = "waiting for bus";
+                    userBus = "0";
+                    dialog.cancel();
+                }
+                Snackbar.make(findViewById(R.id.map), "Successful update", Snackbar.LENGTH_SHORT).show();
+
+            }
+        });
+
+        dialog.show();
+    }
+
+    // TODO: function to draw route between two stations for a bus
+    private void drawRoute(LatLng latLng1, LatLng latLng2) {
+
     }
 }

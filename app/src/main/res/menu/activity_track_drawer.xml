@@ -31,9 +31,9 @@
             android:icon="@drawable/ic_offline_data"
             android:title="Offline bus program" />
         <item
-            android:id="@+id/nav_slideshow"
-            android:icon="@drawable/ic_menu_slideshow"
-            android:title="Slideshow" />
+            android:id="@+id/nav_change_statusAndBus"
+            android:icon="@drawable/ic_status_and_bus"
+            android:title="Change status and/or bus" />
         <item
             android:id="@+id/nav_manage"
             android:icon="@drawable/ic_menu_manage"

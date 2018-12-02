@@ -43,4 +43,9 @@
         <item>43</item>
         <item>44</item>
     </string-array>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="apply">Apply</string>
+    <string name="current_speed">Current speed:</string>
 </resources>

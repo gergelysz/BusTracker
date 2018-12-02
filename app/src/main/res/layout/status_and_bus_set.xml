@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/status_and_bus_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:background="@color/lighterdarkgray"
+        android:padding="12dp">
+
+        <TextView
+            android:id="@+id/editText_sab_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Please choose your current status:"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
+
+        <RadioGroup
+            android:id="@+id/radioGroup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/editText_sab_status">
+
+            <RadioButton
+                android:id="@+id/radioButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:buttonTint="@color/white"
+                android:text="on bus"
+                android:textColor="@color/white"
+                android:textSize="12dp" />
+
+            <RadioButton
+                android:id="@+id/radioButton2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:buttonTint="@color/white"
+                android:text="waiting for bus"
+                android:textColor="@color/white"
+                android:textSize="12dp" />
+
+        </RadioGroup>
+
+        <TextView
+            android:id="@+id/editText_sab_selectBus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/radioGroup"
+            android:text="Please choose your current bus:"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
+
+        <Spinner
+            android:id="@+id/spinner_statAndBus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/editText_sab_selectBus"
+            android:backgroundTint="@color/white"
+            android:popupBackground="@color/lighterdarkgray" />
+
+        <Button
+            android:id="@+id/button_apply_status_and_bus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/spinner_statAndBus"
+            android:layout_centerHorizontal="true"
+            android:background="@color/darkerdarkgray"
+            android:text="@string/apply"
+            android:textColor="@color/white" />
+
+
+    </RelativeLayout>
+
+</RelativeLayout>
