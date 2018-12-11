@@ -35,9 +35,9 @@
             android:icon="@drawable/ic_status_and_bus"
             android:title="Change status and/or bus" />
         <item
-            android:id="@+id/nav_manage"
-            android:icon="@drawable/ic_menu_manage"
-            android:title="Tools" />
+            android:id="@+id/nav_setup_route"
+            android:icon="@drawable/ic_setup_route"
+            android:title="@string/set_up_route" />
     </group>
 
     <item android:title="Communicate">

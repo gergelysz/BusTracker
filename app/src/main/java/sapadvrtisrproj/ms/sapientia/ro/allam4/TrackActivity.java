@@ -30,13 +30,20 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.HeaderViewListAdapter;
 import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.akexorcist.googledirection.DirectionCallback;
+import com.akexorcist.googledirection.GoogleDirection;
+import com.akexorcist.googledirection.constant.TransportMode;
+import com.akexorcist.googledirection.model.Direction;
+import com.akexorcist.googledirection.model.Info;
+import com.akexorcist.googledirection.model.Leg;
+import com.akexorcist.googledirection.model.Route;
+import com.akexorcist.googledirection.model.Step;
+import com.akexorcist.googledirection.util.DirectionConverter;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -46,6 +53,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.Timestamp;
@@ -59,7 +67,6 @@ import com.google.firebase.firestore.QuerySnapshot;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import javax.annotation.Nullable;
 
@@ -114,6 +121,10 @@ public class TrackActivity extends AppCompatActivity
     private TextView userSpeedHeaderNavBar;
 
     private float userSpeed = 0;
+
+    // new
+
+    private HashMap<String, User> userHashMap = new HashMap<>();
 
     @Override
     protected void onDestroy() {
@@ -174,7 +185,7 @@ public class TrackActivity extends AppCompatActivity
         /**
          *   headerView to get the TextViews from
          *   the navigation bar to use setText()
-         *   at showing current status and closest station.
+         *   at showing current status, ID, speed and closest station.
          */
 
         View headerView = navigationView.getHeaderView(0);
@@ -325,7 +336,12 @@ public class TrackActivity extends AppCompatActivity
 
             statusAndBusSelectorLoader();
 
-        } else if (id == R.id.nav_manage) {
+        } else if (id == R.id.nav_setup_route) {
+
+            LatLng latLng1 = new LatLng(46.538376, 24.584428);
+            LatLng latLng2 = new LatLng(46.532472, 24.590490);
+
+            drawRoute(latLng1, latLng2);
 
         } else if (id == R.id.nav_share) {
 
@@ -547,6 +563,8 @@ public class TrackActivity extends AppCompatActivity
                 Toast.makeText(TrackActivity.this, "User data uploaded to the database.", Toast.LENGTH_SHORT).show();
                 Log.d(TAG, "location data uploaded");
                 userId = documentReference.getId();
+                // new
+                newUser.setId(documentReference.getId());
                 userIdHeaderNavBar.setText(getResources().getString(R.string.user_id) + " " + userId);
 //                Toast.makeText(TrackActivity.this, "Current user's id: " + userId, Toast.LENGTH_SHORT).show();
 
@@ -563,44 +581,56 @@ public class TrackActivity extends AppCompatActivity
 
     private void getUsersData() {
 
-        /**
-         *   Getting data from database
-         *   and drawing user on map with marker
-         */
+            /**
+             *   Getting data from database
+             *   and drawing user on map with marker
+             */
 
-        if (!allUsersMarker.isEmpty()) {
-            for (int i = 0; i < allUsersMarker.size(); ++i) {
-                allUsersMarker.get(i).remove();
-            }
-        }
-
-        Log.d(TAG, "Getting users data");
-
-        mFirestore.collection("userCoordinates").addSnapshotListener(new EventListener<QuerySnapshot>() {
-            @Override
-            public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
-                for (DocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
-                    User user = new User(
-                            documentSnapshot.getString("bus"),
-                            documentSnapshot.getString("latitude"),
-                            documentSnapshot.getString("longitude"),
-                            documentSnapshot.getString("status"),
-                            documentSnapshot.getTimestamp("timestamp")
-                    );
-
-                    Log.d(TAG, "Reading user's data: " + documentSnapshot.getId() + " " + user.getStatus() + " " + user.getBus());
-                    usersList.add(user);
-
-                    /**
-                     *   Adding user's location to a Marker ArrayList
-                     */
-
-                    LatLng latLng = new LatLng(Double.parseDouble(user.getLatitude()), Double.parseDouble(user.getLongitude()));
-                    Marker m = mMap.addMarker(new MarkerOptions().title(documentSnapshot.getId()).position(latLng).icon(BitmapDescriptorFactory.fromResource(R.drawable.bus)));
-                    allUsersMarker.add(m);
+            if (!allUsersMarker.isEmpty()) {
+                for (int i = 0; i < allUsersMarker.size(); ++i) {
+                    allUsersMarker.get(i).remove();
                 }
             }
-        });
+
+            Log.d(TAG, "Getting users data");
+
+            mFirestore.collection("userCoordinates").addSnapshotListener(new EventListener<QuerySnapshot>() {
+                @Override
+                public void onEvent(@Nullable QuerySnapshot queryDocumentSnapshots, @Nullable FirebaseFirestoreException e) {
+                    for (DocumentSnapshot documentSnapshot : queryDocumentSnapshots) {
+                        User user = new User(
+                                documentSnapshot.getString("bus"),
+                                documentSnapshot.getString("latitude"),
+                                documentSnapshot.getString("longitude"),
+                                documentSnapshot.getString("status"),
+                                documentSnapshot.getTimestamp("timestamp"),
+                                documentSnapshot.getId()
+                        );
+
+                        Log.d(TAG, "Reading user's data: " + documentSnapshot.getId() + " " + user.getStatus() + " " + user.getBus());
+                        user.setId(documentSnapshot.getId());
+                        usersList.add(user);
+
+                        /**
+                         *   Adding user's location to a Marker ArrayList
+                         */
+
+                        if(user.getStatus().equals("on bus")) {
+
+                            LatLng latLng = new LatLng(Double.parseDouble(user.getLatitude()), Double.parseDouble(user.getLongitude()));
+                            Marker m = mMap.addMarker(new MarkerOptions().position(latLng).icon(BitmapDescriptorFactory.fromResource(R.drawable.bus)));
+                            m.setTitle(user.getBus());
+                            m.setSnippet(documentSnapshot.getId());
+                            allUsersMarker.add(m);
+
+                        }
+
+
+                    }
+                }
+            });
+
+
     }
 
     private void checkAndSetUserStatus() {
@@ -655,8 +685,8 @@ public class TrackActivity extends AppCompatActivity
     }
 
     /**
-     *   Dialog to change the current user's
-     *   status and bus, if he/she is on bus
+     * Dialog to change the current user's
+     * status and bus, if he/she is on bus
      */
 
     private void statusAndBusSelectorLoader() {
@@ -725,5 +755,50 @@ public class TrackActivity extends AppCompatActivity
     // TODO: function to draw route between two stations for a bus
     private void drawRoute(LatLng latLng1, LatLng latLng2) {
 
+        /**
+         *   Android-GoogleDirectionLibrary
+         *   used for drawing routes precisely
+         */
+
+//        GoogleDirection.withServerKey("AIzaSyC8ndBi9gnFk2q-7swDpA9D2D2unRxffFU")
+        GoogleDirection.withServerKey("AIzaSyBgDqW5RAYeihT3impv_s9S77-dIlQ08k0")
+                .from(latLng1)
+//                .from(new LatLng(41.8838111, -87.6657851))
+                .and(new LatLng(46.538317, 24.588151))
+                .and(new LatLng(46.535963, 24.594985))
+                .to(latLng2)
+//                .to(new LatLng(41.9007082, -87.6488802))
+                .transportMode(TransportMode.DRIVING)
+                .execute(new DirectionCallback() {
+                    @Override
+                    public void onDirectionSuccess(Direction direction, String rawBody) {
+                        if(direction.isOK()) {
+                            // Do something
+
+                            Route route = direction.getRouteList().get(0);
+                            Leg leg = route.getLegList().get(0);
+                            ArrayList<LatLng> sectionPositionList = leg.getSectionPoint();
+                            for (LatLng position : sectionPositionList) {
+                                mMap.addMarker(new MarkerOptions().position(position));
+                            }
+
+                            List<Step> stepList = leg.getStepList();
+                            ArrayList<PolylineOptions> polylineOptionList = DirectionConverter.createTransitPolyline(TrackActivity.this, stepList, 5, Color.RED, 3, Color.BLUE);
+                            for (PolylineOptions polylineOption : polylineOptionList) {
+                                mMap.addPolyline(polylineOption);
+                            }
+
+                            Toast.makeText(TrackActivity.this, "LOL", Toast.LENGTH_SHORT).show();
+                        } else {
+                            // Do something
+                            Toast.makeText(TrackActivity.this, direction.getStatus(), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onDirectionFailure(Throwable t) {
+                        // Do something
+                    }
+                });
     }
 }

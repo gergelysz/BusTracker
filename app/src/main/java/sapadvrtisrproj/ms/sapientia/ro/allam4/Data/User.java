@@ -1,13 +1,18 @@
 package sapadvrtisrproj.ms.sapientia.ro.allam4.Data;
 
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.firebase.Timestamp;
 
 public class User {
+
     private String bus;
     private String latitude;
     private String longitude;
     private String status;
     private Timestamp timestamp;
+    private String id;
+
 
     public User() {
     }
@@ -18,6 +23,15 @@ public class User {
         this.longitude = longitude;
         this.status = status;
         this.timestamp = timestamp;
+    }
+
+    public User(String bus, String latitude, String longitude, String status, Timestamp timestamp, String id) {
+        this.bus = bus;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.status = status;
+        this.timestamp = timestamp;
+        this.id = id;
     }
 
     public String getBus() {
@@ -58,6 +72,14 @@ public class User {
 
     public void setTimestamp(Timestamp timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
 
